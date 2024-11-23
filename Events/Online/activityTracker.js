@@ -27,7 +27,7 @@ module.exports = {
             const userData = userActivities.get(userId);
             const member = message.guild.members.cache.get(userId);
 
-            if (userData.messages >= 12000 && !member.roles.cache.has('ROLE_ID_GARNET')) {
+            if (userData.messages >= 12000 && !member.roles.cache.has('')) {
                 member.roles.add('ROLE_ID_GARNET'); // Adiciona a tag @Garnet
             } else if (userData.messages >= 8000 && !member.roles.cache.has('ROLE_ID_BRUISER')) {
                 member.roles.add('ROLE_ID_BRUISER'); // Adiciona a tag @Bruiser

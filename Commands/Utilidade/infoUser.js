@@ -13,8 +13,7 @@ module.exports = {
         },
     ],
     run: async (client, interaction) => {
-        await interaction.deferReply({ ephemeral: false }); // Deferindo para ganhar mais tempo
-
+        await interaction.deferReply({ ephemeral: false }); 
         const targetUser = interaction.options.getUser('usuário');
         const member = interaction.guild.members.cache.get(targetUser.id);
 

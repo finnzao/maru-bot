@@ -16,12 +16,11 @@ module.exports = {
         },
     ],
     run: async (client, interaction) => {
-        await interaction.deferReply({ ephemeral: true }); // Deferindo para ganhar mais tempo
+        await interaction.deferReply({ ephemeral: true });
 
         const deleteAmount = interaction.options.getInteger('quantidade');
         const targetChannel = interaction.channel;
 
-        // Verificar se o usuário tem permissão para gerenciar mensagens
         const requiredPermissions = Discord.PermissionsBitField.Flags.ManageMessages;
         const permissionError = checkPermissions(interaction, requiredPermissions);
         if (permissionError) {
@@ -30,7 +29,6 @@ module.exports = {
             });
         }
 
-        // Verificar se o bot tem permissão para gerenciar mensagens
         if (!targetChannel.permissionsFor(interaction.guild.members.me).has(Discord.PermissionsBitField.Flags.ManageMessages)) {
             return interaction.editReply({
                 content: `❌ Eu não tenho permissão para gerenciar mensagens neste canal.`,
@@ -38,7 +36,6 @@ module.exports = {
         }
 
         try {
-            // Buscar e deletar as mensagens
             const fetchedMessages = await targetChannel.messages.fetch({ limit: deleteAmount });
             await targetChannel.bulkDelete(fetchedMessages, true);
 
@@ -46,9 +43,8 @@ module.exports = {
                 content: `✅ Foram apagadas **${fetchedMessages.size}** mensagens deste canal.`,
             });
 
-            // Log para o webhook
             const webhookClient = new Discord.WebhookClient({
-                url: process.env.CLEAR_WEBHOOK_URL, // Certifique-se de que esta URL é válida
+                url: process.env.CLEAR_WEBHOOK_URL,
             });
 
             const embed = new Discord.EmbedBuilder()

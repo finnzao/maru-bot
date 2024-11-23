@@ -13,19 +13,16 @@ module.exports = {
         },
     ],
     run: async (client, interaction) => {
-        await interaction.deferReply({ ephemeral: true }); // Deferindo para ganhar mais tempo
-
+        await interaction.deferReply({ ephemeral: true });
         const targetUser = interaction.options.getUser('usuário');
         const targetChannel = interaction.channel;
 
-        // Verificar se o executor tem permissão para gerenciar mensagens
         if (!interaction.member.permissions.has(Discord.PermissionsBitField.Flags.ManageMessages)) {
             return interaction.editReply({
                 content: '❌ Você não tem permissão para apagar mensagens.',
             });
         }
 
-        // Verificar se o bot tem permissão para gerenciar mensagens no canal atual
         if (!targetChannel.permissionsFor(interaction.guild.members.me).has(Discord.PermissionsBitField.Flags.ManageMessages)) {
             return interaction.editReply({
                 content: `❌ Eu não tenho permissão para apagar mensagens neste canal.`,
@@ -33,34 +30,29 @@ module.exports = {
         }
 
         try {
-            // Buscar as mensagens no canal
             const fetchedMessages = await targetChannel.messages.fetch({ limit: 100 });
             const userMessages = fetchedMessages.filter(message => message.author.id === targetUser.id);
 
-            // Verificar se há mensagens do usuário a serem apagadas
             if (userMessages.size === 0) {
                 return interaction.editReply({
                     content: `❌ Não foram encontradas mensagens de ${targetUser.tag} no canal ${targetChannel}.`,
                 });
             }
 
-            // Deletar as mensagens do usuário
             await targetChannel.bulkDelete(userMessages, true);
 
             interaction.editReply({
                 content: `✅ Foram apagadas **${userMessages.size}** mensagens de ${targetUser.tag} no canal ${targetChannel}.`,
             });
 
-            // Verificar se o webhook está configurado corretamente antes de tentar enviar um log
             if (!process.env.CLEAR_WEBHOOK_URL) {
                 console.warn('⚠️ Webhook URL não configurada em .env. Log de exclusão de mensagens não será enviado.');
                 return;
             }
 
             try {
-                // Log para o webhook
                 const webhookClient = new Discord.WebhookClient({
-                    url: process.env.CLEAR_WEBHOOK_URL, // Certifique-se de que esta URL é válida
+                    url: process.env.CLEAR_WEBHOOK_URL,
                 });
 
                 const embed = new Discord.EmbedBuilder()

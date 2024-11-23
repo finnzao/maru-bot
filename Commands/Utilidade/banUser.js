@@ -2,7 +2,7 @@ const Discord = require('../../Utils/discordClient');
 
 module.exports = {
     name: 'ban',
-    description: 'Banir permanentemente um usuário.',
+    description: 'Banir permanentemente um usuário e apagar todas as suas mensagens.',
     type: Discord.ApplicationCommandType.ChatInput,
     options: [
         {
@@ -19,34 +19,30 @@ module.exports = {
         },
     ],
     run: async (client, interaction) => {
-        await interaction.deferReply({ ephemeral: true }); // Deferindo para ganhar mais tempo
+        await interaction.deferReply({ ephemeral: true });
 
         const targetUser = interaction.options.getUser('usuário');
         const reason = interaction.options.getString('motivo');
         const member = interaction.guild.members.cache.get(targetUser.id);
 
-        // Verificar se o executor tem permissão para banir membros
         if (!interaction.member.permissions.has(Discord.PermissionsBitField.Flags.BanMembers)) {
             return interaction.editReply({
                 content: '❌ Você não tem permissão para banir membros.',
             });
         }
 
-        // Verificar se o bot tem permissão para banir membros
         if (!interaction.guild.members.me.permissions.has(Discord.PermissionsBitField.Flags.BanMembers)) {
             return interaction.editReply({
                 content: '❌ Eu não tenho permissão para banir membros.',
             });
         }
 
-        // Verificar se o membro a ser banido existe no servidor
         if (!member) {
             return interaction.editReply({
                 content: '❌ Não consegui encontrar o usuário especificado no servidor.',
             });
         }
 
-        // Verificar se o usuário é banível (ex: o cargo do bot é maior que o do usuário)
         if (!member.bannable) {
             return interaction.editReply({
                 content: '❌ Não consigo banir este usuário. Certifique-se de que meu cargo esteja acima do cargo do usuário e que eu tenha as permissões necessárias.',
@@ -54,35 +50,43 @@ module.exports = {
         }
 
         try {
-            // Banir o usuário
+            const channels = interaction.guild.channels.cache.filter(channel => channel.isText());
+            for (const channel of channels.values()) {
+                try {
+                    const fetchedMessages = await channel.messages.fetch({ limit: 100 });
+                    const userMessages = fetchedMessages.filter(message => message.author.id === targetUser.id);
+                    await channel.bulkDelete(userMessages, true);
+                } catch (err) {
+                    console.error(`Erro ao tentar apagar as mensagens de ${targetUser.tag} no canal ${channel.name}:`, err);
+                }
+            }
+
             await member.ban({ reason });
 
             interaction.editReply({
-                content: `✅ **${targetUser.username}** foi banido por "${reason}".`,
+                content: `✅ **${targetUser.username}** foi banido e todas as suas mensagens foram apagadas.`,
             });
 
-            // Log para o webhook
             const webhookClient = new Discord.WebhookClient({
-                url: process.env.BAN_WEBHOOK_URL, // Certifique-se de que esta URL é válida
+                url: roles.banWebhook,
             });
 
             const embed = new Discord.EmbedBuilder()
                 .setColor(Discord.Colors.Red)
                 .setTitle('Usuário Banido')
-                .setThumbnail(targetUser.displayAvatarURL({ dynamic: true })) // Adiciona a miniatura com o avatar do usuário banido
+                .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
                 .addFields(
                     { name: 'Executor', value: `${interaction.user.tag} (ID: ${interaction.user.id})` },
                     { name: 'Usuário Banido', value: `${targetUser.tag} (ID: ${targetUser.id})` },
                     { name: 'Motivo', value: reason }
                 )
-                .setImage(targetUser.displayAvatarURL({ dynamic: true, size: 512 })) // Mostra a imagem do avatar do usuário banido em maior tamanho
-                .setTimestamp();
+                .setImage(targetUser.displayAvatarURL({ dynamic: true, size: 512 }))
 
             await webhookClient.send({ embeds: [embed] });
         } catch (error) {
             console.error(error);
             interaction.editReply({
-                content: '❌ Ocorreu um erro ao tentar banir o usuário.',
+                content: '❌ Ocorreu um erro ao tentar banir o usuário e apagar suas mensagens.',
             });
         }
     },

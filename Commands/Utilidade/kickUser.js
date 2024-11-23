@@ -1,5 +1,6 @@
 const Discord = require('../../Utils/discordClient');
 const { checkPermissions } = require('../../Utils/permissionUtils');
+const { webhooks } = require('../../config');
 
 module.exports = {
     name: 'kick',
@@ -34,14 +35,12 @@ module.exports = {
             });
         }
 
-        // Verificar se o membro a ser expulso existe no servidor
         if (!member) {
             return interaction.editReply({
                 content: '❌ Não consegui encontrar o usuário especificado no servidor.',
             });
         }
 
-        // Verificar se o usuário é expulsável (ex: o cargo do bot é maior que o do usuário)
         if (!member.kickable) {
             return interaction.editReply({
                 content: '❌ Não consigo expulsar este usuário. Certifique-se de que meu cargo esteja acima do cargo do usuário e que eu tenha as permissões necessárias.',
@@ -49,16 +48,14 @@ module.exports = {
         }
 
         try {
-            // Expulsar o usuário
             await member.kick(reason);
 
             interaction.editReply({
                 content: `✅ **${targetUser.username}** foi expulso por "${reason}".`,
             });
 
-            // Log para o webhook
             const webhookClient = new Discord.WebhookClient({
-                url: 'https://discord.com/api/webhooks/1307139297857765467/K43v5M7KsIFSYh1ku27vBQmIBd704XzWQijPN_gZ7u4gIGgQC0Zm1T4UngKPZI-SlWhD', // Certifique-se de que esta URL é válida
+                url: webhooks.muteWebhook,
             });
 
             const embed = new Discord.EmbedBuilder()
