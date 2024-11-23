@@ -36,7 +36,7 @@ module.exports = {
 
                     // Notificar o usuário de forma privada (DM)
                     await message.author.send(`⚠️ Você foi temporariamente silenciado no servidor **${message.guild.name}** por 1 minuto devido a envio excessivo de mensagens em um curto período de tempo. Por favor, evite enviar mensagens repetitivas para não ser silenciado novamente.`);
-
+                    
                     // Limpar histórico de mensagens do usuário após o timeout ser aplicado
                     userMessages.delete(message.author.id);
 

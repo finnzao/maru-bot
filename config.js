@@ -28,8 +28,12 @@ const config = {
         tsuchinoe: '1308842073243521055',
         hinoto: '1308842166210138192',
         hashira: '1308842227157565441',
-        muted: '1307470277772312576', // Para o comando de mute
-    },
+        muted: '1307470277772312576',
+        notificationRole: '1309895315222167653'
+    }, 
+    channels: {
+        notificationChannel: '1307215044173365258'
+    }
 };
 
 module.exports = config;
