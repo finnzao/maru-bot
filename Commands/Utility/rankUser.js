@@ -1,6 +1,6 @@
 // Commands/Utilidade/rank.js
 const Discord = require('../../Utils/discordClient');
-const userActivities = require('../../Events/Online/activityTracker').userActivities;
+const userActivities = require('../../Events/StartUp/activityTracker').userActivities;
 
 module.exports = {
     name: 'rank',

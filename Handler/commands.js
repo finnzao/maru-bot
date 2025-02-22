@@ -1,39 +1,46 @@
-const fs = require('fs').promises
-require('colors')
-const Discord = require('discord.js')
+const fs = require('fs').promises;
+const path = require('path');
+const Discord = require('discord.js');
+const { checkPermission } = require('../Utils/commandMiddleware');
 
 async function commandsHandler(client) {
-    const slashArray = []
-    let comandosCarregados = []
-    client.slashCommands = new Discord.Collection()
+  client.slashCommands = new Discord.Collection();
+  
+  try {
+    const folders = await fs.readdir('./Commands');
 
-    try {
-        const folders = await fs.readdir('./Commands')
+    for (const folder of folders) {
+      const files = await fs.readdir(`./Commands/${folder}/`);
 
-        for (const subfolder of folders) {
-            const files = await fs.readdir(`./Commands/${subfolder}/`)
+      for (const file of files) {
+        if (!file.endsWith('.js')) continue;
 
-            for (const file of files) {
-                if (!file.endsWith('.js')) return
+        const command = require(`../Commands/${folder}/${file}`);
 
-                const command = require(`../Commands/${subfolder}/${file}`)
+        if (!command.name) continue;
 
-                if (!command.name) return
-
-                client.slashCommands.set(command.name, command)
-                slashArray.push(command)
-                comandosCarregados.push(command.name)
-            }
+        // Aplica middleware automaticamente em comandos de moderação e admin
+        if (['Moderation', 'Admin'].includes(folder)) {
+          const originalRun = command.run;
+          command.run = async (client, interaction) => {
+            await checkPermission(['Media', 'Maxima'])(client, interaction, async () => {
+              await originalRun(client, interaction);
+            });
+          };
         }
 
-        client.on('ready', () => {
-            client.guilds.cache.forEach(guild => guild.commands.set(slashArray))
-            console.log(`📘 Comandos Carregados: [${comandosCarregados.join(', ')}]`.blue)
-        })
-
-    } catch (error) {
-        console.log('Erro ao carregar comandos: '.red, error)
+        client.slashCommands.set(command.name, command);
+      }
     }
+
+    client.on('ready', () => {
+      client.guilds.cache.forEach(guild => guild.commands.set([...client.slashCommands.values()]));
+      console.log(`📘 Comandos carregados!`);
+    });
+
+  } catch (error) {
+    console.log('Erro ao carregar comandos: ', error);
+  }
 }
 
-module.exports = commandsHandler
+module.exports = commandsHandler;

@@ -1,6 +1,6 @@
 // Commands/Utilidade/tags.js
 const Discord = require('../../Utils/discordClient');
-const userActivities = require('../../Events/Online/activityTracker').userActivities;
+const userActivities = require('../../Events/StartUp/activityTracker').userActivities;
 const { roles } = require('../../config');
 
 module.exports = {

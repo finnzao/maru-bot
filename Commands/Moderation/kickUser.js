@@ -54,9 +54,14 @@ module.exports = {
                 content: `✅ **${targetUser.username}** foi expulso por "${reason}".`,
             });
 
-            const webhookClient = new Discord.WebhookClient({
-                url: webhooks.muteWebhook,
-            });
+            if (!webhooks.muteWebhook) {
+                console.error("❌ Erro: Webhook URL não definida!");
+                return interaction.editReply({ content: '❌ Ocorreu um erro: Webhook não configurado corretamente.' });
+            }
+
+            const webhookClient = new Discord.WebhookClient({ url: webhooks.muteWebhook });
+
+
 
             const embed = new Discord.EmbedBuilder()
                 .setColor(Discord.Colors.Red)
